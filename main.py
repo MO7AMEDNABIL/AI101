@@ -4,6 +4,8 @@ import mediapipe as mp
 import numpy as np
 import time
 
+__all__ = [mp, cv]
+
 
 class armDetector:
     def __init__ (self,
@@ -35,19 +37,19 @@ class armDetector:
                                       )
 
     def findbody (self, img, draws = True):
-        imgRGB = cv.cvtColor (img, cv.COLOR_BGR2RGB)
+        imgRGB = img
         self.results = self.pose.process (imgRGB)
 
         if self.results.pose_landmarks:
-            self.mpdraw.draw_landmarks (img, self.results.pose_landmarks, self.mppose.POSE_CONNECTIONS)
+            self.mpdraw.draw_landmarks (imgRGB, self.results.pose_landmarks, self.mppose.POSE_CONNECTIONS)
 
-        return img
+        return imgRGB
 
     def getposition (self, img, draws = True):
         lmList = []
         if self.results.pose_landmarks:
             for id, lm in enumerate (self.results.pose_landmarks.landmark):
-                h, w, c = img.shape
+                h, w, c  = img.shape
                 cx, cy = int (lm.x * w), int (lm.y * h)
                 lmList.append ([id, cx, cy])
                 if draws:
@@ -71,15 +73,15 @@ class handDetector:
         self.mpDraw = mp.solutions.drawing_utils
 
     def findhands (self, img, draws = True):
-        imgRGB = cv.cvtColor (img, cv.COLOR_BGR2RGB)
+        imgRGB = img
         self.results = self.hands.process (imgRGB)
 
         if self.results.multi_hand_landmarks:
             for handLms in self.results.multi_hand_landmarks:
                 if draws:
-                    self.mpDraw.draw_landmarks (img, handLms, self.mpHands.HAND_CONNECTIONS)
+                    self.mpDraw.draw_landmarks (imgRGB, handLms, self.mpHands.HAND_CONNECTIONS)
 
-        return img
+        return imgRGB
 
     def getposition (self, img, hand_no = 0, draws = True):
         lmList = []
@@ -120,25 +122,132 @@ class Biceps:
         return math.degrees (math.acos ((p1 + p2 - p3) / (2 * d1 * d2)))
 
 
+class FaceDetection:
+    def __init__ (self,
+                  static_image_mode = False,
+                  model_complexity = 1,
+                  smooth_landmarks = True,
+                  enable_segmentation = False,
+                  smooth_segmentation = True,
+                  refine_face_landmarks = False,
+                  min_detection_confidence = 0.5,
+                  min_tracking_confidence = 0.5
+                  ):
+        # # -----------------------utility-------------------------------
+        # self.color1 = (0, 0, 0)
+        # self.color2 = (0, 0, 0)
+        self.static_image_mode = static_image_mode
+        self.model_complexity = model_complexity
+        self.smooth_landmarks = smooth_landmarks
+        self.enable_segmentation = enable_segmentation
+        self.smooth_segmentation = smooth_segmentation
+        self.refine_face_landmarks = refine_face_landmarks
+        self.min_detection_confidence = min_detection_confidence
+        self.min_tracking_confidence = min_tracking_confidence
+
+        # self.color_detection = (245, 117, 66)
+        # self.color_detection2 = (245, 66, 230)
+        # self.circle_radius = 1
+
+        self.mp_drawing = mp.solutions.drawing_utils  # drawing utility to help us gathering data
+        self.mp_holistic = mp.solutions.holistic
+        self.hollistic = self.mp_holistic.Holistic(
+            self.static_image_mode,
+            self.model_complexity,
+            self.smooth_landmarks,
+            self.enable_segmentation,
+            self.smooth_segmentation,
+            self.refine_face_landmarks,
+            self.min_detection_confidence,
+            self.min_tracking_confidence
+        )
+
+    def findface (self, img, draws = True):
+
+
+        imgRGB = img
+        self.results = self.hollistic.process (imgRGB)
+
+        if self.results.face_landmarks:
+            if draws:
+                self.mp_drawing.draw_landmarks (imgRGB, self.results.face_landmarks,self.mp_holistic.FACEMESH_TESSELATION,
+                                                self.mp_drawing.DrawingSpec (None, thickness = 1, circle_radius = 1),
+                                                self.mp_drawing.DrawingSpec (None, thickness = 1, circle_radius = 1)
+                                                )
+
+        return imgRGB
+        # self.boolean, frame = src_camera.read ()
+        # # Changing the color to rgb
+        # self.image = cv.cvtColor (frame, cv.COLOR_BGR2RGB)
+        # self.image.flags.writeable = False
+        #
+        # # let's detect
+        # self.result = holistic.process (self.image)
+        #
+        # # detecting face gizmos
+        # self.image.flags.writeable = True
+        # self.image = cv.cvtColor (self.image, cv.COLOR_RGB2BGR)  # rendering!
+        #
+        # self.mp_drawing.draw_landmarks (self.image, self.result.face_landmarks,
+        #                                 self.mp_holistic.FACEMESH_TESSELATION,
+        #                                 self.mp_drawing.DrawingSpec (None, thickness = 1,
+        #                                                              circle_radius = self.circle_radius),
+        #                                 self.mp_drawing.DrawingSpec (None, thickness = 1,
+        #                                                              circle_radius = self.circle_radius)
+        #                                 )
+
+        # mp_drawing.draw_landmarks(image, result.pose_landmarks, mp_holistic.POSE_CONNECTIONS,
+        # mp_drawing.DrawingSpec(color=color_detection, thickness=2, circle_radius=4),
+        # mp_drawing.DrawingSpec(color=color_detection2, thickness=2, circle_radius=2))
+
+        # print (self.result.face_landmarks)
+
+        # btl3 el data and saving it
+        # cv.imshow ("camera of mobile", self.image)
+        #
+        # landmarks = ['class']
+        # for self.value in range (1, 34):
+        #     landmarks += [f"x{self.result.face_landmarks}", f"y{self.value}", f"z{self.value}",
+        #                   f"v{self.value}"]
+        #
+        # # opening file to save the data of landmarks
+        # with open ("coords.csv", mode = "w", newline = "") as file:
+        #     csv_writer = csv.writer (file, delimiter = ",", quotechar = '"',
+        #                              quoting = csv.QUOTE_MINIMAL)  # creating data in excel sheet
+        #     csv_writer.writerow (landmarks)  # typing the data
+
+        # src_camera.release ()
+        # cv.destroyAllWindows ()
+
+
 def main ():
     pTime = 0
     cTime = time.time ()
 
+# noinspection PyUnresolvedReferences
+
     src = cv.VideoCapture (0)
+    face = FaceDetection()
     draw = handDetector ()
     body = armDetector ()
     count = 0
+    goal = int(input("Enter your goal for today: "))
     up = False
     while True:
         p, img = src.read ()
-        img = body.findbody (img)
-        lmList = body.getposition (img)
+        # img = cv.cvtColor (img, cv.COLOR_BGR2RGB)
+        # img = face.findface(img)
+        img = body.findbody(img)
+        # img = draw.findhands(img)
+        # img = body.findbody (img)
+        lmList = body.getposition (img, False)
         if len (lmList) != 0:
             biceps = Biceps ()
             a = biceps.getangle (lmList[16], lmList[14], lmList[12])
+            b = biceps.getangle (lmList[24], lmList[12], lmList[14])
             if a == 0:
                 print ("[Error detecting hand]")
-            elif a < 100 and not up:
+            elif a < 100 and not up and b < 50:
                 count += 1
                 up = True
                 print (count)
@@ -169,7 +278,7 @@ def main ():
 
         cv.imshow ("img", img)
 
-        if cv.waitKey (1) == ord ("e"):
+        if cv.waitKey (1) == ord ("e") or goal == count:
             break
 
 
