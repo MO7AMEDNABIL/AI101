@@ -3,6 +3,7 @@ import cv2 as cv
 import mediapipe as mp
 import numpy as np
 import time
+from tkinter import messagebox
 
 __all__ = [mp, cv]
 
@@ -176,6 +177,8 @@ class FaceDetection:
                                                 )
 
         return imgRGB
+        # OLD PROCEDURAL CODE
+
         # self.boolean, frame = src_camera.read ()
         # # Changing the color to rgb
         # self.image = cv.cvtColor (frame, cv.COLOR_BGR2RGB)
@@ -220,7 +223,7 @@ class FaceDetection:
         # cv.destroyAllWindows ()
 
 
-def main ():
+def main (goal, arm):
     pTime = 0
     cTime = time.time ()
 
@@ -231,7 +234,8 @@ def main ():
     draw = handDetector ()
     body = armDetector ()
     count = 0
-    goal = int(input("Enter your goal for today: "))
+
+
     up = False
     while True:
         p, img = src.read ()
@@ -243,17 +247,23 @@ def main ():
         lmList = body.getposition (img, False)
         if len (lmList) != 0:
             biceps = Biceps ()
-            a = biceps.getangle (lmList[16], lmList[14], lmList[12])
-            b = biceps.getangle (lmList[24], lmList[12], lmList[14])
+            if arm == "left":
+                a = biceps.getangle (lmList[15], lmList[13], lmList[11])
+                b = biceps.getangle (lmList[23], lmList[11], lmList[15])
+            else:
+                a = biceps.getangle (lmList[16], lmList[14], lmList[12])
+                b = biceps.getangle (lmList[24], lmList[12], lmList[14])
+
             if a == 0:
                 print ("[Error detecting hand]")
             elif a < 100 and not up and b < 50:
                 count += 1
                 up = True
-                print (count)
 
             elif a > 150 and up:
                 up = False
+
+        # OLD PROCEDURAL CODE
 
         # img = draw.findhands(img)
         # lmList = draw.getposition(img, 0, False)
@@ -275,12 +285,14 @@ def main ():
         # pTime = cTime
         # cTime = time.time ()
         # cv.putText (img, str (int (fps)), (10, 70), cv.FONT_HERSHEY_PLAIN, 3, (255, 0, 255), 3)
-
+        cv.putText (img, f"Count = {count}", (50, 50), cv.FONT_HERSHEY_SIMPLEX,
+                    1, (255, 0, 0), 2, cv.LINE_AA)
         cv.imshow ("img", img)
 
         if cv.waitKey (1) == ord ("e") or goal == count:
+            cv.destroyAllWindows()
             break
 
 
 if __name__ == "__main__":
-    main ()
+    main()
