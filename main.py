@@ -223,7 +223,7 @@ class FaceDetection:
         # cv.destroyAllWindows ()
 
 
-def main (goal, arm):
+def main (goal = 5, arm = "right"):
     pTime = 0
     cTime = time.time ()
 
@@ -234,16 +234,14 @@ def main (goal, arm):
     draw = handDetector ()
     body = armDetector ()
     count = 0
-
-
     up = False
+
     while True:
         p, img = src.read ()
         # img = cv.cvtColor (img, cv.COLOR_BGR2RGB)
         # img = face.findface(img)
         img = body.findbody(img)
         # img = draw.findhands(img)
-        # img = body.findbody (img)
         lmList = body.getposition (img, False)
         if len (lmList) != 0:
             biceps = Biceps ()

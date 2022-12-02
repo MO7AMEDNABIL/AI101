@@ -37,7 +37,7 @@ def adding():
             goal_entry.delete(0, END)
             arm_entry.delete(0, END)
 
-    main.main(int(getting_goal), getting_arm)
+    main.main(int(getting_goal), getting_arm.lower())
     messagebox.showinfo (title = "Congratulations!", message = " You have already reached your goal! ")
 
 
@@ -50,8 +50,9 @@ def searching():
         messagebox.showinfo(title="Warning", message="the file isn't here")
     else:
         if getting_name in data:
-            getting_name_from_data_base = data[getting_name]["name"]
-            messagebox.showinfo(title=getting_name, message=" Found already existing user! ")
+            getting_goal_from_data_base = data[getting_name]["goal"]
+            getting_arm_from_data_base = data[getting_name]["arm"]
+            messagebox.showinfo(title=getting_name, message=f"Found already existing user! \nYour last goal was {getting_goal_from_data_base} on the {getting_arm_from_data_base} arm")
         else:
             messagebox.showerror(title="error", message=f"there isn't information about {getting_name}!")
 # ----------Window Settings --------
